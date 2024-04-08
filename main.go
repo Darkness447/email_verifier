@@ -19,7 +19,8 @@ func main() {
 	}
 
 	if err := scanner.Err(); err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, "error reading standard input:", err)
+		os.Exit(1)
 	}
 }
 
@@ -28,11 +29,11 @@ func checkDomain(domain string) {
 	var spfRecor, dmarcRecord string
 
 	mxRecords, err := net.LookupMX(domain)
-
 	if err != nil {
 		panic(err)
 	}
 
+	fmt.Println("ahsdlnlsk")
 	if len(mxRecords) > 0 {
 		hasMX = true
 	}
@@ -51,4 +52,19 @@ func checkDomain(domain string) {
 		}
 	}
 
+	dmarcRecords, err := net.LookupTXT("_dmarc." + domain)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, record := range dmarcRecords {
+		if strings.HasPrefix(record, "v=DMARC1") {
+			hasDMARC = true
+			dmarcRecord = record
+			break
+		}
+	}
+
+	fmt.Printf("%v,%v,%v,%v,%v,%v", domain, hasMX, hasSPF, hasDMARC, spfRecor, dmarcRecord)
 }
